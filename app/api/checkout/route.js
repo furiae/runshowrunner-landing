@@ -1,7 +1,5 @@
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 const PLANS = {
   starter: {
     name: "Starter",
@@ -17,6 +15,9 @@ const PLANS = {
 
 export async function POST(request) {
   try {
+    // Initialize Stripe at runtime, not build time
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
     const { email, plan, successUrl, cancelUrl } = await request.json();
 
     // Validate inputs
