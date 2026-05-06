@@ -51,7 +51,7 @@ function Nav({ onPlans, onContact }) {
         <div className="nav-cta">
           <a href="#plans" className="btn btn-link" style={{fontSize: 13}}>See pricing</a>
           <a href="#cta" className="btn btn-primary" style={{padding: "10px 16px", fontSize: 13}}>
-            Book a call <span className="arr">→</span>
+            Start free trial <span className="arr">→</span>
           </a>
         </div>
       </div>
@@ -75,7 +75,7 @@ function Hero() {
               show notes that rank, and a publish-ready feed — every week, on schedule, without you opening a timeline.
             </p>
             <div className="hero-ctas">
-              <a href="#cta" className="btn btn-primary">Book a 20-min call <span className="arr">→</span></a>
+              <a href="#cta" className="btn btn-primary">Start free trial <span className="arr">→</span></a>
               <a href="#plans" className="btn btn-ghost">See pricing</a>
             </div>
           </div>
@@ -419,68 +419,71 @@ function FAQ() {
   );
 }
 
-// ---- booking placeholder ----
-function BookingPlaceholder() {
-  const [selected, setSelected] = useState(14);
-  const [time, setTime] = useState(null);
-  const days = useMemo(() => {
-    // build a calendar grid for May 2026 (1-indexed)
-    const out = [];
-    // May 1, 2026 is a Friday → DOW index 5 (Sun=0)
-    for (let i = 0; i < 5; i++) out.push({ pad: true });
-    for (let d = 1; d <= 31; d++) {
-      const dow = (5 + (d - 1)) % 7; // 0=Sun
-      const weekend = dow === 0 || dow === 6;
-      const past = d < 4;
-      out.push({ d, avail: !weekend && !past });
-    }
-    return out;
-  }, []);
+// ---- email/stripe form ----
+function EmailStripeForm() {
+  const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState("starter");
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const times = ["9:00 AM", "10:30 AM", "1:00 PM", "2:30 PM", "4:00 PM"];
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setLoading(true);
+    try {
+      // Send email to Stripe/payment handler
+      // Replace with actual Stripe or email service integration
+      await new Promise(r => setTimeout(r, 1000)); // simulate request
+      setSubmitted(true);
+      setTimeout(() => setEmail(""), 2000);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  if (submitted) {
+    return (
+      <div className="email-form">
+        <div className="form-success">
+          <div className="success-icon">✓</div>
+          <div className="success-message">
+            <strong>Thanks!</strong><br/>
+            Check your email for next steps.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="booking">
-      <div className="booking-head">
-        <div className="title">20-min intro call</div>
-        <div className="duration">20 min · video</div>
+    <div className="email-form">
+      <div className="form-head">
+        <div className="title">Get started</div>
+        <div className="subtitle">We'll send you a link to set up your account and choose a plan.</div>
       </div>
-      <div className="booking-grid">
-        <div className="booking-cal">
-          <div className="cal-month">
-            <div className="name">May 2026</div>
-            <div className="nav"><span>‹</span><span>›</span></div>
-          </div>
-          <div className="cal-grid">
-            {["S","M","T","W","T","F","S"].map((d, i) => <div key={i} className="dow">{d}</div>)}
-            {days.map((d, i) => {
-              if (d.pad) return <div key={"p"+i} />;
-              const cls = ["day"];
-              if (d.avail) cls.push("avail");
-              else cls.push("disabled");
-              if (selected === d.d) cls.push("selected");
-              return (
-                <div key={d.d}
-                  className={cls.join(" ")}
-                  onClick={() => d.avail && setSelected(d.d)}>{d.d}</div>
-              );
-            })}
-          </div>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <input
+            type="email"
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="form-input"
+          />
         </div>
-        <div className="booking-times">
-          <div className="label">Thu, May {selected}</div>
-          {times.map(t => (
-            <button key={t} className="time-slot" onClick={() => setTime(t)}
-              style={time === t ? {background: "var(--ink)", color: "var(--paper)", borderColor: "var(--ink)"} : {}}>
-              <span>{t}</span>
-              <span className="time-zone" style={time === t ? {color: "rgba(255,245,236,0.6)"} : {}}>EST</span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="booking-foot">
-        <span>Inline embed placeholder</span>
-        <span>Step 1 of 2</span>
+        <button
+          type="submit"
+          disabled={loading || !email}
+          className="form-submit"
+        >
+          {loading ? "Sending..." : "Send setup link"} <span className="arr">→</span>
+        </button>
+      </form>
+      <div className="form-note">
+        <span>No credit card required. Start with a 2-week trial.</span>
       </div>
     </div>
   );
@@ -504,20 +507,15 @@ function FinalCTA() {
               <span className="italic-accent">Start shipping.</span>
             </h2>
             <p className="lede" style={{maxWidth: "44ch"}}>
-              A 20-minute call to see if we're a fit, or skip ahead and check out — first episode lands within a week.
+              Get your account set up, choose a plan, and start with a 2-week free trial. First episode lands within a week.
             </p>
-            <div className="actions">
-              <a href="#" className="btn btn-primary">Book a 20-min call <span className="arr">→</span></a>
-              <a href="#" className="btn btn-accent">Check out · Starter <span className="arr">→</span></a>
-              <a href="#" className="btn btn-ghost">Check out · Pro <span className="arr">→</span></a>
-            </div>
             <div className="meta">
               <span>No setup fee</span>
               <span>Cancel anytime</span>
               <span>First episode in 7 days</span>
             </div>
           </div>
-          <BookingPlaceholder />
+          <EmailStripeForm />
         </div>
       </div>
     </section>
