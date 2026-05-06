@@ -423,47 +423,56 @@ function FAQ() {
 function EmailStripeForm() {
   const [email, setEmail] = useState("");
   const [plan, setPlan] = useState("starter");
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = async (e) => {
+  const plans = [
+    { value: "starter", label: "Starter — $1,500/mo", price: 1500 },
+    { value: "pro", label: "Pro — $2,500/mo", price: 2500 }
+  ];
+
+  const handleCheckout = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !plan) return;
 
-    setLoading(true);
+    setProcessing(true);
+    setError(null);
+
     try {
-      // Send email to Stripe/payment handler
-      // Replace with actual Stripe or email service integration
-      await new Promise(r => setTimeout(r, 1000)); // simulate request
-      setSubmitted(true);
-      setTimeout(() => setEmail(""), 2000);
+      // Stripe checkout integration — replace with actual Stripe session creation
+      // POST to your backend to create a Stripe checkout session
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          plan,
+          successUrl: window.location.origin + "/success",
+          cancelUrl: window.location.origin
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      const { url } = await response.json();
+      if (url) window.location.href = url; // Redirect to Stripe
     } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
       console.error(err);
     }
-    setLoading(false);
-  };
 
-  if (submitted) {
-    return (
-      <div className="email-form">
-        <div className="form-success">
-          <div className="success-icon">✓</div>
-          <div className="success-message">
-            <strong>Thanks!</strong><br/>
-            Check your email for next steps.
-          </div>
-        </div>
-      </div>
-    );
-  }
+    setProcessing(false);
+  };
 
   return (
     <div className="email-form">
       <div className="form-head">
-        <div className="title">Get started</div>
-        <div className="subtitle">We'll send you a link to set up your account and choose a plan.</div>
+        <div className="title">Start your free trial</div>
+        <div className="subtitle">Choose a plan and get started. First 2 weeks on us.</div>
       </div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleCheckout}>
         <div className="form-group">
           <input
             type="email"
@@ -474,16 +483,28 @@ function EmailStripeForm() {
             className="form-input"
           />
         </div>
+        <div className="form-group">
+          <select
+            value={plan}
+            onChange={(e) => setPlan(e.target.value)}
+            className="form-input form-select"
+          >
+            {plans.map(p => (
+              <option key={p.value} value={p.value}>{p.label}</option>
+            ))}
+          </select>
+        </div>
+        {error && <div className="form-error">{error}</div>}
         <button
           type="submit"
-          disabled={loading || !email}
+          disabled={processing || !email}
           className="form-submit"
         >
-          {loading ? "Sending..." : "Send setup link"} <span className="arr">→</span>
+          {processing ? "Redirecting to payment..." : "Start trial → proceed to payment"} <span className="arr">→</span>
         </button>
       </form>
       <div className="form-note">
-        <span>No credit card required. Start with a 2-week trial.</span>
+        <span>2-week free trial. Cancel anytime. No credit card required upfront.</span>
       </div>
     </div>
   );
